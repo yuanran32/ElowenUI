@@ -14,5 +14,17 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      include: ['packages/components/**/src/*.{ts,vue}'],
+      thresholds: {
+        lines: 60,
+        functions: 75,
+        branches: 75,
+        statements: 60,
+      },
+    },
   },
 })
