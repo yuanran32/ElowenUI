@@ -1,0 +1,55 @@
+{
+  "name": "@elowen/elowen-ui",
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "description": "A lightweight Vue 3 component library built with TypeScript and Vite.",
+  "files": ["dist"],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/types/elowen-ui/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/elowen-ui/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css",
+    "./components": {
+      "types": "./dist/types/components/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "pnpm -C play dev",
+    "build": "vite build",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/test-utils": "^2.4.6",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.19",
+    "vite-plugin-dts": "^4.5.4",
+    "vitepress": "^1.6.4",
+    "vitest": "^2.1.9",
+    "vue": "^3.5.13",
+    "vue-tsc": "^2.2.4"
+  }
+}

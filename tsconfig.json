@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node", "vite/client", "vitest/globals"],
+    "ignoreDeprecations": "5.0",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationDir": "dist/types",
+    // "baseUrl": ".",
+    "paths": {
+      "@elowen-ui/components": ["./packages/components/index.ts"],
+      "@elowen-ui/components/*": ["./packages/components/*"],
+      "@elowen-ui/utils": ["./packages/utils/index.ts"],
+      "@elowen-ui/utils/*": ["./packages/utils/*"],
+      "@elowen-ui/elowen-ui": ["./packages/elowen-ui/index.ts"],
+      "@elowen-ui/elowen-ui/*": ["./packages/elowen-ui/*"]
+    }
+  },
+  "include": ["packages/**/*", "play/**/*", "docs/**/*", "env.d.ts", "vitest.config.ts"]
+}
