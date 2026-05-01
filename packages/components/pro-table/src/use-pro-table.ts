@@ -1,4 +1,5 @@
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import type { SchemaFormModel } from '../../schema-form'
 import type { TableRowData, TableSortState } from '../../table'
 import type { ProTableProps, ProTableRequestParams, ProTableRequestResult } from './pro-table'
 
@@ -7,15 +8,30 @@ export const useProTable = (props: ProTableProps, emit: any) => {
   const total = ref(0)
   const page = ref(props.defaultPage)
   const currentPageSize = ref(props.pageSize)
+  const searchModel = reactive<SchemaFormModel>({})
+  const submittedSearchModel = ref<SchemaFormModel>({})
   const loading = ref(false)
   const error = ref<unknown>()
+  const loaded = ref(false)
   const sortState = ref<TableSortState>({
     key: '',
     order: null,
   })
   let requestId = 0
+  let isFirstSearchModelSync = true
 
   const pageCount = computed(() => Math.max(1, Math.ceil(total.value / currentPageSize.value)))
+  const requestStatus = computed(() => {
+    if (loading.value) {
+      return 'loading'
+    }
+
+    if (error.value) {
+      return 'error'
+    }
+
+    return loaded.value ? 'success' : 'idle'
+  })
 
   const requestParams = computed<ProTableRequestParams>(() => ({
     page: page.value,
@@ -26,8 +42,23 @@ export const useProTable = (props: ProTableProps, emit: any) => {
           order: sortState.value.order,
         }
       : undefined,
-    query: props.query,
+    query: {
+      ...props.query,
+      ...submittedSearchModel.value,
+    },
   }))
+
+  const syncSearchModel = (value: SchemaFormModel) => {
+    Object.keys(searchModel).forEach((key) => {
+      delete searchModel[key]
+    })
+    Object.assign(searchModel, value)
+  }
+
+  const updateSearchModel = (value: SchemaFormModel) => {
+    syncSearchModel(value)
+    emit('update:searchModel', { ...searchModel })
+  }
 
   const load = async () => {
     const currentId = ++requestId
@@ -42,6 +73,7 @@ export const useProTable = (props: ProTableProps, emit: any) => {
 
       data.value = result.data
       total.value = result.total
+      loaded.value = true
       emit('load', result)
       return result
     } catch (currentError) {
@@ -52,6 +84,7 @@ export const useProTable = (props: ProTableProps, emit: any) => {
       data.value = []
       total.value = 0
       error.value = currentError
+      loaded.value = true
       emit('error', currentError)
       return undefined
     } finally {
@@ -69,6 +102,17 @@ export const useProTable = (props: ProTableProps, emit: any) => {
       key: '',
       order: null,
     }
+    syncSearchModel({})
+    submittedSearchModel.value = {}
+    emit('update:searchModel', {})
+    emit('reset')
+    return load()
+  }
+
+  const submitSearch = () => {
+    page.value = props.defaultPage
+    submittedSearchModel.value = { ...searchModel }
+    emit('search', submittedSearchModel.value)
     return load()
   }
 
@@ -128,6 +172,18 @@ export const useProTable = (props: ProTableProps, emit: any) => {
     }
   )
 
+  watch(
+    () => props.searchModel,
+    (value) => {
+      syncSearchModel(value)
+      if (isFirstSearchModelSync) {
+        submittedSearchModel.value = { ...value }
+        isFirstSearchModelSync = false
+      }
+    },
+    { immediate: true, deep: true }
+  )
+
   onMounted(() => {
     if (props.immediate) {
       load()
@@ -140,11 +196,15 @@ export const useProTable = (props: ProTableProps, emit: any) => {
     page,
     currentPageSize,
     pageCount,
+    searchModel,
     loading,
     error,
+    requestStatus,
     sortState,
     reload,
     reset,
+    submitSearch,
+    updateSearchModel,
     getTableData,
     handleSortChange,
     changePageSize,

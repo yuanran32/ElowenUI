@@ -7,8 +7,8 @@ ElowenUI 是一个基于 Vue 3、TypeScript 和 Vite 构建的轻量中后台业
 - 基于 `Vue 3 + TypeScript + Vite`
 - 使用 `VitePress` 构建文档站
 - 提供 `play/` 本地 Playground
-- 提供 `SchemaForm` 配置化表单，减少重复表单模板
-- 提供 `ProTable` 业务表格，封装请求、分页、排序和状态管理
+- 提供 `SchemaForm` 配置化表单，支持输入框、文本域、选择器、自定义插槽、字段校验、联动显隐和动态禁用
+- 提供 `ProTable` 业务表格，封装搜索表单、远程请求、分页、页容量切换、服务端排序、刷新、重置、错误重试和请求状态管理
 - 提供运行时主题 API，支持主色、圆角和明暗模式切换
 - 支持整库安装和具名导出
 - 提供单元测试、覆盖率报告和类型检查
@@ -21,9 +21,19 @@ ElowenUI 是一个基于 Vue 3、TypeScript 和 Vite 构建的轻量中后台业
 `Element Plus` 这类组件库提供的是通用基础组件；ElowenUI 更强调中后台业务抽象：
 
 - 基础组件负责稳定交互和统一视觉。
-- `SchemaForm` 负责把表单从模板驱动变成配置驱动。
-- `ProTable` 负责收敛列表页的请求、分页、排序、loading、empty、error。
+- `SchemaForm` 负责把表单从模板驱动变成配置驱动，并提供统一校验、字段状态和自定义字段扩展点。
+- `ProTable` 负责收敛列表页的搜索、请求、分页、排序、loading、empty、error 和重试流程。
 - 主题 token 负责让业务系统可以运行时切换品牌风格。
+
+## 当前组件
+
+| 分类 | 组件 |
+| --- | --- |
+| 基础输入 | `Button`、`Input`、`Select` |
+| 表单抽象 | `Form`、`SchemaForm` |
+| 数据展示 | `Table`、`ProTable`、`Tag` |
+| 反馈与浮层 | `Alert`、`Dialog` |
+| 布局容器 | `Card`、`Divider` |
 
 ## 安装依赖
 
@@ -105,7 +115,13 @@ createApp(App).use(ElowenUI).mount('#app')
 
 ```ts
 import '@elowen/elowen-ui/style.css'
-import { MyButton, MyInput, MySelect, MyDialog } from '@elowen/elowen-ui/components'
+import {
+  MyButton,
+  MyInput,
+  MySelect,
+  MySchemaForm,
+  MyProTable,
+} from '@elowen/elowen-ui/components'
 ```
 
 按组件子路径导入：
@@ -115,6 +131,16 @@ import '@elowen/elowen-ui/style.css'
 import { MyButton } from '@elowen/elowen-ui/components/button'
 import { MySchemaForm } from '@elowen/elowen-ui/components/schema-form'
 import { MyProTable } from '@elowen/elowen-ui/components/pro-table'
+```
+
+业务组件类型也会随包导出：
+
+```ts
+import type {
+  SchemaFormField,
+  ProTableRequestParams,
+  TableColumn,
+} from '@elowen/elowen-ui'
 ```
 
 ## 工程流程

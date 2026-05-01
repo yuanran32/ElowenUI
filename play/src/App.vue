@@ -14,7 +14,6 @@ const formModel = ref({
   framework: undefined as string | undefined,
 })
 const formResult = ref('尚未提交')
-const schemaFormRef = ref()
 const tableRef = ref()
 const schemaModel = ref({
   keyword: '',
@@ -22,7 +21,6 @@ const schemaModel = ref({
   role: undefined as string | undefined,
   remark: '',
 })
-const tableQuery = ref<Record<string, unknown>>({})
 
 const frameworkOptions = [
   { label: 'Vue 3', value: 'vue' },
@@ -55,6 +53,15 @@ const schema: SchemaFormField[] = [
     label: '关键词',
     component: 'input',
     placeholder: '搜索用户名或负责人',
+    rules: [
+      {
+        trigger: 'change',
+        validator: async (value: string) => {
+          await new Promise((resolve) => setTimeout(resolve, 120))
+          return value === 'root' ? 'root 是系统保留账号' : true
+        },
+      },
+    ],
   },
   {
     field: 'status',
@@ -71,17 +78,19 @@ const schema: SchemaFormField[] = [
   },
   {
     field: 'remark',
-    label: '备注',
+    label: '禁用原因',
     component: 'textarea',
-    placeholder: '输入筛选备注，展示 textarea 字段能力',
+    placeholder: '状态为禁用时显示，联动显隐',
     hidden: (model) => model.status !== 'disabled',
+    disabled: (model) => model.role === 'admin',
+    dependencies: ['status', 'role'],
   },
 ]
 
 const proColumns = [
   { key: 'name', title: '用户名' },
   { key: 'owner', title: '负责人' },
-  { key: 'role', title: '角色' },
+  { key: 'roleText', title: '角色' },
   { key: 'statusText', title: '状态' },
   { key: 'score', title: '活跃度', sortable: true },
 ]
@@ -114,6 +123,7 @@ const tableRequest = async ({ page, pageSize, sorter, query }: ProTableRequestPa
   return {
     data: pagedRows.map((row) => ({
       ...row,
+      roleText: roleOptions.find((option) => option.value === row.role)?.label,
       statusText: row.status === 'active' ? '启用' : '禁用',
     })),
     total: filteredRows.length,
@@ -153,19 +163,6 @@ const resetForm = () => {
   formResult.value = '表单已重置'
 }
 
-const submitQuery = () => {
-  tableQuery.value = { ...schemaModel.value }
-}
-
-const resetQuery = () => {
-  schemaFormRef.value?.setFieldsValue?.({
-    keyword: '',
-    status: undefined,
-    role: undefined,
-    remark: '',
-  })
-  tableQuery.value = {}
-}
 </script>
 
 <template>
@@ -210,38 +207,37 @@ const resetQuery = () => {
         </div>
       </div>
 
-      <div class="grid">
-        <div class="demo-block">
-          <h3>User Search</h3>
-          <MySchemaForm ref="schemaFormRef" v-model="schemaModel" :schema="schema">
-            <template #role="{ model, field, updateField }">
-              <MySelect
-                :model-value="model[field.field]"
-                :options="roleOptions"
-                :placeholder="field.placeholder"
-                clearable
-                @update:model-value="updateField(field.field, $event)"
-              />
-            </template>
-          </MySchemaForm>
-          <div class="form-actions">
-            <MyButton type="primary" @click="submitQuery">查询</MyButton>
-            <MyButton plain @click="resetQuery">重置</MyButton>
-          </div>
-        </div>
-
-        <div class="demo-block">
-          <h3>User Table</h3>
-          <MyProTable
-            ref="tableRef"
-            :columns="proColumns"
-            :request="tableRequest"
-            :query="tableQuery"
-            :page-sizes="[2, 5, 10]"
-            :page-size="2"
-            row-key="id"
-          />
-        </div>
+      <div class="demo-block">
+        <h3>User Management</h3>
+        <MyProTable
+          ref="tableRef"
+          v-model:search-model="schemaModel"
+          :columns="proColumns"
+          :request="tableRequest"
+          :search-schema="schema"
+          :page-sizes="[2, 5, 10]"
+          :page-size="2"
+          empty-text="暂无匹配用户"
+          loading-text="正在加载用户..."
+          search-text="查询"
+          reset-text="重置"
+          refresh-text="刷新"
+          retry-text="重试"
+          row-key="id"
+        >
+          <template #search-role="{ model, field, updateField }">
+            <MySelect
+              :model-value="model[field.field]"
+              :options="roleOptions"
+              :placeholder="field.placeholder"
+              clearable
+              @update:model-value="updateField(field.field, $event)"
+            />
+          </template>
+          <template #toolbar="{ status }">
+            <span class="table-caption">Request status: {{ status }}</span>
+          </template>
+        </MyProTable>
       </div>
     </section>
 
@@ -744,6 +740,11 @@ const resetQuery = () => {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.table-caption {
+  color: var(--my-color-text-secondary);
+  font-size: var(--my-font-size-small);
 }
 
 .summary-card {

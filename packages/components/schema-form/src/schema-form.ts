@@ -12,6 +12,7 @@ export type SchemaFormField = {
   placeholder?: string
   options?: SelectOption[]
   rules?: FormRule[]
+  dependencies?: string[]
   hidden?: boolean | ((model: SchemaFormModel) => boolean)
   disabled?: boolean | ((model: SchemaFormModel) => boolean)
   slot?: string

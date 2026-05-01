@@ -12,8 +12,8 @@
 - VitePress 文档站
 - 基础测试
 - 库模式构建和类型声明输出
-- `SchemaForm` 配置化表单
-- `ProTable` 业务表格
+- `SchemaForm` 配置化表单：输入框、文本域、选择器、自定义字段、异步校验、联动显隐、动态禁用
+- `ProTable` 业务表格：搜索表单、远程请求、分页、页容量切换、服务端排序、错误重试、刷新和重置
 - 运行时主题 API
 
 ## 设计目标
@@ -34,8 +34,8 @@
 - `Form` 的字段校验和方法暴露
 - `Dialog` 的遮罩关闭、键盘关闭和滚动锁定
 - `Table` 的排序、选择、空状态和固定列逻辑
-- `SchemaForm` 的 schema 渲染、动态显隐、表单方法暴露
-- `ProTable` 的请求、分页、排序、错误态和刷新
+- `SchemaForm` 的 schema 渲染、文本域、自定义字段插槽、动态显隐、动态禁用、字段依赖校验和表单方法暴露
+- `ProTable` 的搜索表单校验、请求并发保护、分页、页容量切换、服务端排序、错误态、刷新和重置
 
 ### 区别于通用 UI 库
 
@@ -77,6 +77,16 @@
 - `Divider`
 - `Table`
 - `ProTable`
+
+## 业务组件重点
+
+### SchemaForm
+
+`SchemaForm` 使用 `SchemaFormField[]` 描述表单字段，目前支持 `input`、`textarea`、`select` 和 `custom` 四类字段。字段可以声明 `rules` 做同步或异步校验，也可以通过 `hidden`、`disabled` 和 `dependencies` 处理联动场景。组件会暴露 `validate`、`validateField`、`clearValidate`、`setFieldError`、`getFieldState`、`resetFields`、`getFieldsValue` 和 `setFieldsValue` 等方法，方便页面在提交、重置和服务端错误回填时使用。
+
+### ProTable
+
+`ProTable` 把列表页的搜索、请求、分页和排序集中起来。组件接收 `request(params)`，内部维护 `page`、`pageSize`、`sorter`、搜索表单提交值和请求状态。它会把外部 `query` 与内置搜索表单值合并后传给请求函数，并在请求失败时展示错误区域和重试入口。当前实现也处理了请求返回顺序问题，旧请求晚于新请求返回时不会覆盖最新数据。
 
 ## 工程能力
 

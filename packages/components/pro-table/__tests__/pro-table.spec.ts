@@ -83,6 +83,63 @@ describe('MyProTable', () => {
     await vi.waitFor(() => expect(wrapper.text()).toContain('Recovered'))
   })
 
+  it('renders default error retry action', async () => {
+    const request = vi.fn()
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValueOnce({ data: [{ id: 1, name: 'Recovered', score: 99 }], total: 1 })
+
+    const wrapper = mount(ProTable, {
+      props: {
+        columns,
+        request,
+      },
+    })
+
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Request failed.'))
+    await wrapper.find('.my-pro-table__error .my-button').trigger('click')
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Recovered'))
+  })
+
+  it('links the built-in search form with request params and reset', async () => {
+    const request = vi.fn().mockResolvedValue({
+      data: [{ id: 1, name: 'Alice', score: 90 }],
+      total: 1,
+    })
+    const wrapper = mount(ProTable, {
+      props: {
+        columns,
+        request,
+        immediate: false,
+        searchSchema: [
+          { field: 'keyword', label: 'Keyword', component: 'input' },
+          {
+            field: 'reason',
+            label: 'Reason',
+            component: 'textarea',
+            hidden: (model) => model.keyword !== 'blocked',
+          },
+        ],
+      },
+    })
+
+    await wrapper.get('input').setValue('Alice')
+    await wrapper.findAll('.my-pro-table__search-actions .my-button')[0].trigger('click')
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(1))
+
+    expect(request.mock.calls[0][0]).toMatchObject({
+      page: 1,
+      pageSize: 10,
+      query: { keyword: 'Alice' },
+    })
+    expect(wrapper.emitted('update:searchModel')?.[0][0]).toEqual({ keyword: 'Alice' })
+    expect(wrapper.emitted('search')?.[0][0]).toEqual({ keyword: 'Alice' })
+
+    await wrapper.findAll('.my-pro-table__search-actions .my-button')[1].trigger('click')
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(2))
+    expect(request.mock.calls[1][0]).toMatchObject({ query: {} })
+    expect(wrapper.emitted('reset')).toBeTruthy()
+  })
+
   it('keeps the latest request result when responses resolve out of order', async () => {
     const resolvers: Array<(value: { data: any[]; total: number }) => void> = []
     const request = vi.fn(() => new Promise<{ data: any[]; total: number }>((resolve) => {
@@ -162,5 +219,18 @@ describe('MyProTable', () => {
 
     await wrapper.setProps({ pagination: false })
     expect(wrapper.find('.my-pro-table__pager').exists()).toBe(false)
+  })
+
+  it('renders empty state text when the request returns no rows', async () => {
+    const request = vi.fn().mockResolvedValue({ data: [], total: 0 })
+    const wrapper = mount(ProTable, {
+      props: {
+        columns,
+        request,
+        emptyText: 'No matching users',
+      },
+    })
+
+    await vi.waitFor(() => expect(wrapper.text()).toContain('No matching users'))
   })
 })

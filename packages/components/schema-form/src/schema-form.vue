@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
-import { MyForm, MyFormItem } from '../../form'
+import { MyForm, MyFormItem, type FormTrigger } from '../../form'
 import { MyInput } from '../../input'
 import { MySelect } from '../../select'
 import { schemaFormEmits, schemaFormProps, type SchemaFormModel } from './schema-form'
@@ -43,6 +43,19 @@ const validate = async () => {
   return valid
 }
 
+const validateField = (field: string, trigger?: FormTrigger) =>
+  formRef.value?.validateField?.(field, trigger)
+
+const clearValidate = (fields?: string | string[]) => {
+  formRef.value?.clearValidate?.(fields)
+}
+
+const setFieldError = (field: string, message: string) => {
+  formRef.value?.setFieldError?.(field, message)
+}
+
+const getFieldState = (field: string) => formRef.value?.getFieldState?.(field)
+
 const resetFields = () => {
   formRef.value?.resetFields?.()
   emit('update:modelValue', { ...innerModel })
@@ -59,6 +72,10 @@ const setFieldsValue = (values: Partial<SchemaFormModel>) => {
 
 defineExpose({
   validate,
+  validateField,
+  clearValidate,
+  setFieldError,
+  getFieldState,
   resetFields,
   getFieldsValue,
   setFieldsValue,
@@ -72,6 +89,7 @@ defineExpose({
       :key="field.field"
       :label="field.label"
       :prop="field.field"
+      :dependencies="field.dependencies ?? []"
     >
       <template #default="{ validate: validateField }">
         <MyInput
@@ -113,6 +131,7 @@ defineExpose({
           :name="field.slot || field.field"
           :field="field"
           :model="innerModel"
+          :disabled="isFieldDisabled(field)"
           :update-field="updateField"
           :validate="validateField"
         />

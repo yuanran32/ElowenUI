@@ -96,6 +96,66 @@ describe('MySchemaForm', () => {
     expect(wrapper.findAll('input').at(1)?.attributes('disabled')).toBeDefined()
   })
 
+  it('exposes field-level validation and error controls', async () => {
+    const Demo = defineComponent({
+      components: { SchemaForm },
+      setup() {
+        const formRef = ref<InstanceType<typeof SchemaForm>>()
+        const model = ref({ username: 'taken', email: 'user@example.com' })
+        const fieldSchema: SchemaFormField[] = [
+          {
+            field: 'username',
+            label: 'Username',
+            component: 'input',
+            rules: [
+              {
+                trigger: 'change',
+                validator: async (value: string) => {
+                  await new Promise((resolve) => setTimeout(resolve, 0))
+                  return value === 'taken' ? 'Username already exists' : true
+                },
+              },
+            ],
+          },
+          {
+            field: 'email',
+            label: 'Email',
+            component: 'input',
+            dependencies: ['username'],
+            rules: [
+              {
+                trigger: 'change',
+                validator: (_value: string, currentModel) =>
+                  currentModel.username ? true : 'Username is required first',
+              },
+            ],
+          },
+        ]
+
+        return { formRef, model, fieldSchema }
+      },
+      template: '<SchemaForm ref="formRef" v-model="model" :schema="fieldSchema" />',
+    })
+
+    const wrapper = mount(Demo)
+
+    expect(await wrapper.vm.formRef!.validateField('username', 'change')).toBe(
+      'Username already exists'
+    )
+    expect(wrapper.vm.formRef!.getFieldState('username')).toEqual({
+      error: 'Username already exists',
+      validating: false,
+    })
+
+    wrapper.vm.formRef!.clearValidate('username')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).not.toContain('Username already exists')
+
+    wrapper.vm.formRef!.setFieldError('email', 'Email domain is blocked')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('Email domain is blocked')
+  })
+
   it('does not mutate the incoming model object directly', async () => {
     const model = { name: '', role: undefined as string | undefined }
     const wrapper = mount(SchemaForm, {
