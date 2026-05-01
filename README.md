@@ -1,17 +1,29 @@
 # ElowenUI
 
-ElowenUI 是一个基于 Vue 3、TypeScript 和 Vite 构建的轻量组件库项目。仓库包含组件源码、文档站、Playground、测试、类型声明产物，以及基础的 CI / 覆盖率 / 发布流程。
+ElowenUI 是一个基于 Vue 3、TypeScript 和 Vite 构建的轻量中后台业务组件库。项目不以复刻大型通用 UI 库为目标，而是在基础组件之上提供 `SchemaForm`、`ProTable`、运行时主题 token 和类型友好的组件 API，用于降低后台系统中表单、查询、表格、弹窗等重复开发成本。
 
 ## 特性
 
 - 基于 `Vue 3 + TypeScript + Vite`
 - 使用 `VitePress` 构建文档站
 - 提供 `play/` 本地 Playground
+- 提供 `SchemaForm` 配置化表单，减少重复表单模板
+- 提供 `ProTable` 业务表格，封装请求、分页、排序和状态管理
+- 提供运行时主题 API，支持主色、圆角和明暗模式切换
 - 支持整库安装和具名导出
 - 提供单元测试、覆盖率报告和类型检查
 - 接入 `GitHub Actions` 持续集成
 - 接入 `Changesets` 做版本管理和发包流程
 - 组件目录按 `view + types + composables` 方式组织
+
+## 项目定位
+
+`Element Plus` 这类组件库提供的是通用基础组件；ElowenUI 更强调中后台业务抽象：
+
+- 基础组件负责稳定交互和统一视觉。
+- `SchemaForm` 负责把表单从模板驱动变成配置驱动。
+- `ProTable` 负责收敛列表页的请求、分页、排序、loading、empty、error。
+- 主题 token 负责让业务系统可以运行时切换品牌风格。
 
 ## 安装依赖
 
@@ -94,6 +106,15 @@ createApp(App).use(ElowenUI).mount('#app')
 ```ts
 import '@elowen/elowen-ui/style.css'
 import { MyButton, MyInput, MySelect, MyDialog } from '@elowen/elowen-ui/components'
+```
+
+按组件子路径导入：
+
+```ts
+import '@elowen/elowen-ui/style.css'
+import { MyButton } from '@elowen/elowen-ui/components/button'
+import { MySchemaForm } from '@elowen/elowen-ui/components/schema-form'
+import { MyProTable } from '@elowen/elowen-ui/components/pro-table'
 ```
 
 ## 工程流程

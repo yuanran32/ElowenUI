@@ -22,9 +22,11 @@ const columns = [
 
 const rows = [
   { id: 1, name: 'ElowenUI Playground', owner: 'Alice', score: 88, status: 'active' },
-  { id: 2, name: 'Design System', owner: 'Bob', score: 95, status: 'review' },
+  { id: 2, name: 'Design System', owner: 'Bob', score: 95, status: 'disabled' },
   { id: 3, name: 'Landing Page Revamp', owner: 'Cindy', score: 91, status: 'active' },
 ]
+
+const rowSelectable = (row) => row.status !== 'disabled'
 </script>
 
 ## 基础用法
@@ -79,7 +81,7 @@ const rows = [
   v-model:selected-row-keys="selectedRowKeys"
   :columns="columns"
   :data="rows"
-  selectable
+  :selectable="rowSelectable"
   border
   variant="elevated"
   max-height="280px"
@@ -108,7 +110,7 @@ const selectedRowKeys = ref<number[]>([])
     v-model:selected-row-keys="selectedRowKeys"
     :columns="columns"
     :data="rows"
-    selectable
+    :selectable="rowSelectable"
     border
     variant="elevated"
     max-height="280px"
@@ -138,13 +140,18 @@ const selectedRowKeys = ref<number[]>([])
 | `variant` | 表面风格 | `'default' \| 'soft' \| 'elevated'` | `default` |
 | `stripe` | 是否显示斑马纹 | `boolean` | `false` |
 | `border` | 是否显示外边框 | `boolean` | `false` |
-| `selectable` | 是否显示选择列 | `boolean` | `false` |
+| `selectable` | 是否显示选择列，或控制某行是否可选 | `boolean \| ((row, index) => boolean)` | `false` |
 | `selectedRowKeys` | 受控选中行 key | `(string \| number)[]` | `[]` |
 | `highlightCurrentRow` | 是否高亮当前行 | `boolean` | `false` |
 | `emptyText` | 空状态文案 | `string` | `'No data'` |
 | `maxHeight` | 最大滚动高度 | `string \| number` | `undefined` |
+| `loading` | 是否展示加载态 | `boolean` | `false` |
+| `loadingText` | 加载态文案 | `string` | `'Loading...'` |
 | `defaultSortKey` | 初始排序列 key | `string` | `''` |
 | `defaultSortOrder` | 初始排序顺序 | `'ascending' \| 'descending' \| null` | `null` |
+| `sortMode` | 排序模式 | `'client' \| 'server'` | `'client'` |
+| `sortState` | 服务端排序受控状态 | `TableSortState` | `undefined` |
+| `selectionFixed` | 选择列是否固定在左侧 | `boolean` | `false` |
 
 ## TableColumn
 
@@ -160,6 +167,8 @@ const selectedRowKeys = ref<number[]>([])
 | `ellipsis` | 是否省略显示 | `boolean` |
 | `formatter` | 自定义显示值格式化函数 | `(row, column, index) => unknown` |
 | `sortMethod` | 自定义排序函数 | `(a, b) => number` |
+| `fixed` | 固定列方向 | `'left' \| 'right'` |
+| `hidden` | 是否隐藏列 | `boolean` |
 
 ## Events
 
@@ -177,3 +186,7 @@ const selectedRowKeys = ref<number[]>([])
 | --- | --- |
 | `header-{key}` | 自定义某列表头内容 |
 | `cell-{key}` | 自定义某列单元格内容 |
+
+## 注意事项
+
+当 `selectable` 是函数时，返回 `false` 的行会禁用复选框；全选会跳过这些行，`selectionChange` 也只返回可选行。

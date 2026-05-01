@@ -70,6 +70,35 @@ describe('MySelect', () => {
     wrapper.unmount()
   })
 
+  it('exposes combobox aria state and supports home end tab keys', async () => {
+    const wrapper = mount(Select, {
+      props: {
+        options,
+      },
+      attachTo: document.body,
+    })
+
+    const trigger = wrapper.get('.my-select__trigger')
+    expect(trigger.attributes('role')).toBe('combobox')
+    expect(trigger.attributes('aria-expanded')).toBe('false')
+
+    await trigger.trigger('keydown', { key: 'End' })
+    expect(trigger.attributes('aria-expanded')).toBe('true')
+    expect(trigger.attributes('aria-activedescendant')).toContain('option-1')
+
+    await trigger.trigger('keydown', { key: 'Home' })
+    expect(trigger.attributes('aria-activedescendant')).toContain('option-0')
+
+    const optionNodes = wrapper.findAll('.my-select__option')
+    expect(optionNodes[0].attributes('role')).toBe('option')
+    expect(optionNodes[0].attributes('aria-selected')).toBe('false')
+
+    await trigger.trigger('keydown', { key: 'Tab' })
+    expect(wrapper.find('.my-select__dropdown').exists()).toBe(false)
+
+    wrapper.unmount()
+  })
+
   it('closes when clicking outside', async () => {
     const wrapper = mount(Select, {
       props: {

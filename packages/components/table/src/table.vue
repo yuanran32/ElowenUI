@@ -23,6 +23,7 @@ const {
   handleRowClick,
   isCurrentRow,
   isIndeterminate,
+  isRowSelectable,
   isRowSelected,
   resolveRowKey,
   sortedData,
@@ -105,6 +106,7 @@ watch([allSelected, isIndeterminate], () => {
                 type="checkbox"
                 aria-label="Select all rows"
                 :checked="allSelected"
+                :disabled="!sortedData.some((row, index) => isRowSelectable(row, index))"
                 @change="toggleAllSelection(($event.target as HTMLInputElement).checked)"
               />
             </th>
@@ -172,7 +174,13 @@ watch([allSelected, isIndeterminate], () => {
           <tr
             v-for="(row, rowIndex) in sortedData"
             :key="resolveRowKey(row, rowIndex)"
-            :class="['my-table__row', { 'is-current': isCurrentRow(row, rowIndex) }]"
+            :class="[
+              'my-table__row',
+              {
+                'is-current': isCurrentRow(row, rowIndex),
+                'is-selection-disabled': props.selectable && !isRowSelectable(row, rowIndex),
+              },
+            ]"
             @click="handleRowClick(row, rowIndex)"
           >
             <td
@@ -189,6 +197,7 @@ watch([allSelected, isIndeterminate], () => {
                 type="checkbox"
                 aria-label="Select row"
                 :checked="isRowSelected(row, rowIndex)"
+                :disabled="!isRowSelectable(row, rowIndex)"
                 @change="toggleRowSelection(row, rowIndex, ($event.target as HTMLInputElement).checked)"
               />
             </td>
@@ -421,6 +430,16 @@ watch([allSelected, isIndeterminate], () => {
   height: 16px;
   accent-color: var(--my-color-primary);
   cursor: pointer;
+}
+
+.my-table__checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.my-table__row.is-selection-disabled .my-table__cell,
+.my-table__row.is-selection-disabled .my-table__selection-cell {
+  color: var(--my-color-text-placeholder);
 }
 
 .my-table__empty {

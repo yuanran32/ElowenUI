@@ -69,6 +69,41 @@ describe('MyTable', () => {
     expect(wrapper.vm.selectedRowKeys).toEqual([1, 2, 3])
   })
 
+  it('skips disabled rows when selecting rows', async () => {
+    const Demo = defineComponent({
+      components: { Table },
+      setup() {
+        const selectedRowKeys = ref<number[]>([])
+        return { columns, data, selectedRowKeys }
+      },
+      template: `
+        <Table
+          v-model:selected-row-keys="selectedRowKeys"
+          :columns="columns"
+          :data="data"
+          row-key="id"
+          :selectable="(row) => row.active"
+        />
+      `,
+    })
+
+    const wrapper = mount(Demo)
+    const table = wrapper.findComponent(Table)
+    const checkboxes = wrapper.findAll('input[type="checkbox"]')
+
+    expect(checkboxes[2].attributes('disabled')).toBeDefined()
+
+    await checkboxes[2].trigger('change')
+    expect(wrapper.vm.selectedRowKeys).toEqual([])
+
+    await checkboxes[0].setValue(true)
+    expect(wrapper.vm.selectedRowKeys).toEqual([1, 3])
+    expect(table.emitted('selectionChange')?.[0][0]).toEqual([
+      { id: 1, name: 'Gamma', score: 83, active: true },
+      { id: 3, name: 'Beta', score: 91, active: true },
+    ])
+  })
+
   it('renders custom cell slots and highlights current row', async () => {
     const wrapper = mount(Table, {
       props: {

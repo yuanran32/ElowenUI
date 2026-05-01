@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { applyTheme, type ProTableRequestParams, type SchemaFormField } from '@elowen-ui/elowen-ui'
 
 const theme = ref<'light' | 'dark'>('light')
 const keyword = ref('Hello ElowenUI')
@@ -13,11 +14,31 @@ const formModel = ref({
   framework: undefined as string | undefined,
 })
 const formResult = ref('尚未提交')
+const schemaFormRef = ref()
+const tableRef = ref()
+const schemaModel = ref({
+  keyword: '',
+  status: undefined as string | undefined,
+  role: undefined as string | undefined,
+  remark: '',
+})
+const tableQuery = ref<Record<string, unknown>>({})
 
 const frameworkOptions = [
   { label: 'Vue 3', value: 'vue' },
   { label: 'Nuxt 3', value: 'nuxt' },
   { label: 'Pinia', value: 'pinia' },
+]
+
+const statusOptions = [
+  { label: '启用', value: 'active' },
+  { label: '禁用', value: 'disabled' },
+]
+
+const roleOptions = [
+  { label: '管理员', value: 'admin' },
+  { label: '运营', value: 'operator' },
+  { label: '访客', value: 'guest' },
 ]
 
 const formRules = {
@@ -28,7 +49,78 @@ const formRules = {
   framework: [{ required: true, message: '请选择技术栈', trigger: 'change' }],
 }
 
-const componentCount = computed(() => 10)
+const schema: SchemaFormField[] = [
+  {
+    field: 'keyword',
+    label: '关键词',
+    component: 'input',
+    placeholder: '搜索用户名或负责人',
+  },
+  {
+    field: 'status',
+    label: '状态',
+    component: 'select',
+    placeholder: '请选择状态',
+    options: statusOptions,
+  },
+  {
+    field: 'role',
+    label: '角色',
+    component: 'custom',
+    placeholder: '请选择角色',
+  },
+  {
+    field: 'remark',
+    label: '备注',
+    component: 'textarea',
+    placeholder: '输入筛选备注，展示 textarea 字段能力',
+    hidden: (model) => model.status !== 'disabled',
+  },
+]
+
+const proColumns = [
+  { key: 'name', title: '用户名' },
+  { key: 'owner', title: '负责人' },
+  { key: 'role', title: '角色' },
+  { key: 'statusText', title: '状态' },
+  { key: 'score', title: '活跃度', sortable: true },
+]
+
+const tableRequest = async ({ page, pageSize, sorter, query }: ProTableRequestParams) => {
+  const baseRows = [
+    { id: 1, name: 'Elowen Admin', owner: 'Alice', role: 'admin', status: 'active', score: 92 },
+    { id: 2, name: 'Content Operator', owner: 'Bob', role: 'operator', status: 'active', score: 88 },
+    { id: 3, name: 'Guest Reviewer', owner: 'Cindy', role: 'guest', status: 'disabled', score: 63 },
+    { id: 4, name: 'Risk Auditor', owner: 'Dora', role: 'operator', status: 'disabled', score: 71 },
+    { id: 5, name: 'System Owner', owner: 'Evan', role: 'admin', status: 'active', score: 97 },
+  ]
+  const keywordValue = String(query?.keyword ?? '').trim().toLowerCase()
+  const filteredRows = baseRows.filter((row) => {
+    const matchesKeyword = !keywordValue ||
+      row.name.toLowerCase().includes(keywordValue) ||
+      row.owner.toLowerCase().includes(keywordValue)
+    const matchesStatus = !query?.status || row.status === query.status
+    const matchesRole = !query?.role || row.role === query.role
+
+    return matchesKeyword && matchesStatus && matchesRole
+  })
+  const sortedRows = sorter?.order === 'descending'
+    ? [...filteredRows].sort((a, b) => b.score - a.score)
+    : [...filteredRows].sort((a, b) => a.score - b.score)
+  const pagedRows = sortedRows.slice((page - 1) * pageSize, page * pageSize)
+
+  await new Promise((resolve) => setTimeout(resolve, 120))
+
+  return {
+    data: pagedRows.map((row) => ({
+      ...row,
+      statusText: row.status === 'active' ? '启用' : '禁用',
+    })),
+    total: filteredRows.length,
+  }
+}
+
+const componentCount = computed(() => 12)
 
 const removeTag = (label: string) => {
   closableTags.value = closableTags.value.filter((item) => item !== label)
@@ -42,6 +134,11 @@ const resetTags = () => {
 
 const toggleTheme = () => {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
+  applyTheme({
+    mode: theme.value,
+    primary: theme.value === 'dark' ? '#22c55e' : '#409eff',
+    radius: theme.value === 'dark' ? '8px' : '10px',
+  })
 }
 
 const submitForm = async () => {
@@ -54,6 +151,20 @@ const submitForm = async () => {
 const resetForm = () => {
   formRef.value?.resetFields()
   formResult.value = '表单已重置'
+}
+
+const submitQuery = () => {
+  tableQuery.value = { ...schemaModel.value }
+}
+
+const resetQuery = () => {
+  schemaFormRef.value?.setFieldsValue?.({
+    keyword: '',
+    status: undefined,
+    role: undefined,
+    remark: '',
+  })
+  tableQuery.value = {}
 }
 </script>
 
@@ -86,6 +197,53 @@ const resetForm = () => {
         </div>
       </div>
     </header>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <h2>SchemaForm + ProTable</h2>
+          <p>面向中后台列表页的配置表单、远程请求、分页、排序和状态管理示例。</p>
+        </div>
+        <div class="value-card">
+          <span>Business Abstraction</span>
+          <strong>Schema + Request</strong>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="demo-block">
+          <h3>User Search</h3>
+          <MySchemaForm ref="schemaFormRef" v-model="schemaModel" :schema="schema">
+            <template #role="{ model, field, updateField }">
+              <MySelect
+                :model-value="model[field.field]"
+                :options="roleOptions"
+                :placeholder="field.placeholder"
+                clearable
+                @update:model-value="updateField(field.field, $event)"
+              />
+            </template>
+          </MySchemaForm>
+          <div class="form-actions">
+            <MyButton type="primary" @click="submitQuery">查询</MyButton>
+            <MyButton plain @click="resetQuery">重置</MyButton>
+          </div>
+        </div>
+
+        <div class="demo-block">
+          <h3>User Table</h3>
+          <MyProTable
+            ref="tableRef"
+            :columns="proColumns"
+            :request="tableRequest"
+            :query="tableQuery"
+            :page-sizes="[2, 5, 10]"
+            :page-size="2"
+            row-key="id"
+          />
+        </div>
+      </div>
+    </section>
 
     <section class="panel">
       <div class="panel__header">

@@ -8,6 +8,7 @@ export type TableVariant = 'default' | 'soft' | 'elevated'
 export type TableSortOrder = 'ascending' | 'descending' | null
 export type TableSortMode = 'client' | 'server'
 export type TableColumnFixed = 'left' | 'right'
+export type TableSelectable = boolean | ((row: TableRowData, index: number) => boolean)
 export type TableRowKeyResolver =
   | string
   | ((row: TableRowData, index: number) => TableRowKey)
@@ -63,7 +64,7 @@ export const tableProps = {
     default: false,
   },
   selectable: {
-    type: Boolean,
+    type: [Boolean, Function] as PropType<TableSelectable>,
     default: false,
   },
   selectedRowKeys: {

@@ -44,7 +44,55 @@
     "./style.css": "./dist/style.css",
     "./components": {
       "types": "./dist/types/components/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/components/index.js"
+    },
+    "./components/alert": {
+      "types": "./dist/types/components/alert/index.d.ts",
+      "import": "./dist/components/alert/index.js"
+    },
+    "./components/button": {
+      "types": "./dist/types/components/button/index.d.ts",
+      "import": "./dist/components/button/index.js"
+    },
+    "./components/card": {
+      "types": "./dist/types/components/card/index.d.ts",
+      "import": "./dist/components/card/index.js"
+    },
+    "./components/dialog": {
+      "types": "./dist/types/components/dialog/index.d.ts",
+      "import": "./dist/components/dialog/index.js"
+    },
+    "./components/divider": {
+      "types": "./dist/types/components/divider/index.d.ts",
+      "import": "./dist/components/divider/index.js"
+    },
+    "./components/form": {
+      "types": "./dist/types/components/form/index.d.ts",
+      "import": "./dist/components/form/index.js"
+    },
+    "./components/input": {
+      "types": "./dist/types/components/input/index.d.ts",
+      "import": "./dist/components/input/index.js"
+    },
+    "./components/pro-table": {
+      "types": "./dist/types/components/pro-table/index.d.ts",
+      "import": "./dist/components/pro-table/index.js"
+    },
+    "./components/schema-form": {
+      "types": "./dist/types/components/schema-form/index.d.ts",
+      "import": "./dist/components/schema-form/index.js"
+    },
+    "./components/select": {
+      "types": "./dist/types/components/select/index.d.ts",
+      "import": "./dist/components/select/index.js"
+    },
+    "./components/table": {
+      "types": "./dist/types/components/table/index.d.ts",
+      "import": "./dist/components/table/index.js"
+    },
+    "./components/tag": {
+      "types": "./dist/types/components/tag/index.d.ts",
+      "import": "./dist/components/tag/index.js"
     }
   },
   "publishConfig": {

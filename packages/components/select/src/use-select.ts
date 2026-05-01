@@ -1,10 +1,14 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
 import type { SelectOption, SelectProps, SelectValue } from './select'
 
+let selectSeed = 0
+
 export const useSelect = (props: SelectProps, emit: any, rootRef: Ref<HTMLElement | undefined>) => {
   const visible = ref(false)
   const hoveredIndex = ref(-1)
   const triggerRef = ref<HTMLButtonElement>()
+  const dropdownId = `my-select-dropdown-${++selectSeed}`
+  const optionIdPrefix = `${dropdownId}-option`
 
   const selectedIndex = computed(() =>
     props.options.findIndex((option) => option.value === props.modelValue)
@@ -91,6 +95,20 @@ export const useSelect = (props: SelectProps, emit: any, rootRef: Ref<HTMLElemen
     hoveredIndex.value = enabledIndexes[nextPosition]
   }
 
+  const moveToEdge = (edge: 'first' | 'last') => {
+    const enabledIndexes = props.options
+      .map((option, index) => (option.disabled ? -1 : index))
+      .filter((index) => index >= 0)
+
+    if (!enabledIndexes.length) {
+      return
+    }
+
+    hoveredIndex.value = edge === 'first'
+      ? enabledIndexes[0]
+      : enabledIndexes[enabledIndexes.length - 1]
+  }
+
   const handleKeydown = (event: KeyboardEvent) => {
     if (props.disabled) {
       return
@@ -132,6 +150,29 @@ export const useSelect = (props: SelectProps, emit: any, rootRef: Ref<HTMLElemen
       event.preventDefault()
       close()
       triggerRef.value?.blur()
+      return
+    }
+
+    if (event.key === 'Tab') {
+      close()
+      return
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault()
+      if (!visible.value) {
+        open()
+      }
+      moveToEdge('first')
+      return
+    }
+
+    if (event.key === 'End') {
+      event.preventDefault()
+      if (!visible.value) {
+        open()
+      }
+      moveToEdge('last')
     }
   }
 
@@ -178,6 +219,8 @@ export const useSelect = (props: SelectProps, emit: any, rootRef: Ref<HTMLElemen
     visible,
     hoveredIndex,
     triggerRef,
+    dropdownId,
+    optionIdPrefix,
     selectedOption,
     showClear,
     toggle,

@@ -25,6 +25,7 @@ export default defineConfig({
           items: [
             { text: 'Introduction', link: '/guide/introduce' },
             { text: 'Getting Started', link: '/guide/getting-started' },
+            { text: 'Theme', link: '/guide/theme' },
           ],
         },
       ],
@@ -42,6 +43,8 @@ export default defineConfig({
             { text: 'Divider', link: '/components/divider' },
             { text: 'Dialog', link: '/components/dialog' },
             { text: 'Table', link: '/components/table' },
+            { text: 'SchemaForm', link: '/components/schema-form' },
+            { text: 'ProTable', link: '/components/pro-table' },
           ],
         },
       ],
@@ -65,6 +68,9 @@ export default defineConfig({
         ),
         '@elowen-ui/utils': fileURLToPath(
           new URL('../../packages/utils/index.ts', import.meta.url)
+        ),
+        '@elowen-ui/theme': fileURLToPath(
+          new URL('../../packages/theme/index.ts', import.meta.url)
         ),
         '@elowen-ui/elowen-ui': fileURLToPath(
           new URL('../../packages/elowen-ui/index.ts', import.meta.url)

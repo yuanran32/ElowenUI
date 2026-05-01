@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { dialogEmits, dialogProps } from './dialog'
 import { useDialog } from './use-dialog'
 
@@ -10,6 +10,7 @@ defineOptions({
 const props = defineProps(dialogProps)
 const emit = defineEmits(dialogEmits)
 const dialogRef = ref<HTMLDivElement>()
+let previousActiveElement: HTMLElement | null = null
 const dialogClasses = computed(() => ['my-dialog', `is-${props.variant}`])
 
 const { visible, dialogStyle, shouldRender, close } = useDialog(props, emit)
@@ -19,12 +20,72 @@ const focusDialog = async () => {
   dialogRef.value?.focus()
 }
 
+const getFocusableElements = () => {
+  if (!dialogRef.value) {
+    return []
+  }
+
+  return Array.from(
+    dialogRef.value.querySelectorAll<HTMLElement>(
+      [
+        'a[href]',
+        'button:not([disabled])',
+        'textarea:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])',
+      ].join(',')
+    )
+  ).filter((element) => !element.hasAttribute('disabled'))
+}
+
+const restoreFocus = async () => {
+  await nextTick()
+  previousActiveElement?.focus?.()
+  previousActiveElement = null
+}
+
+const trapFocus = (event: KeyboardEvent) => {
+  const focusableElements = getFocusableElements()
+
+  if (!focusableElements.length) {
+    event.preventDefault()
+    dialogRef.value?.focus()
+    return
+  }
+
+  const firstElement = focusableElements[0]
+  const lastElement = focusableElements[focusableElements.length - 1]
+  const activeElement = document.activeElement
+
+  if (!dialogRef.value?.contains(activeElement)) {
+    event.preventDefault()
+    firstElement.focus()
+    return
+  }
+
+  if (event.shiftKey && activeElement === firstElement) {
+    event.preventDefault()
+    lastElement.focus()
+    return
+  }
+
+  if (!event.shiftKey && activeElement === lastElement) {
+    event.preventDefault()
+    firstElement.focus()
+  }
+}
+
 watch(
   () => visible.value,
   (value) => {
     if (value) {
+      previousActiveElement = document.activeElement as HTMLElement | null
       focusDialog()
+      return
     }
+
+    restoreFocus()
   },
   { immediate: true }
 )
@@ -40,11 +101,33 @@ const handleClose = () => {
 }
 
 const handleKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Tab') {
+    event.stopPropagation()
+    trapFocus(event)
+    return
+  }
+
   if (event.key === 'Escape' && props.closeOnPressEscape) {
     event.stopPropagation()
     close()
   }
 }
+
+const handleDocumentKeydown = (event: KeyboardEvent) => {
+  if (!visible.value) {
+    return
+  }
+
+  handleKeydown(event)
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleDocumentKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleDocumentKeydown)
+})
 </script>
 
 <template>

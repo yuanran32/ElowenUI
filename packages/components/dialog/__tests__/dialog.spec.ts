@@ -126,4 +126,52 @@ describe('MyDialog', () => {
 
     wrapper.unmount()
   })
+
+  it('traps focus inside dialog and restores focus after close', async () => {
+    const opener = document.createElement('button')
+    opener.textContent = 'Open'
+    document.body.appendChild(opener)
+    opener.focus()
+
+    const wrapper = mount(Dialog, {
+      props: {
+        modelValue: true,
+        showClose: false,
+      },
+      slots: {
+        default: `
+          <button class="first-action">First</button>
+          <button class="last-action">Last</button>
+        `,
+      },
+      attachTo: document.body,
+    })
+
+    await wrapper.vm.$nextTick()
+    const first = document.body.querySelector('.first-action') as HTMLButtonElement
+    const last = document.body.querySelector('.last-action') as HTMLButtonElement
+
+    first.focus()
+    first.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    }))
+    expect(document.activeElement).toBe(last)
+
+    last.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Tab',
+      bubbles: true,
+      cancelable: true,
+    }))
+    expect(document.activeElement).toBe(first)
+
+    await wrapper.setProps({ modelValue: false })
+    await wrapper.vm.$nextTick()
+    expect(document.activeElement).toBe(opener)
+
+    wrapper.unmount()
+    opener.remove()
+  })
 })

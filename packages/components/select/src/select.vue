@@ -15,6 +15,8 @@ const {
   visible,
   hoveredIndex,
   triggerRef,
+  dropdownId,
+  optionIdPrefix,
   selectedOption,
   showClear,
   toggle,
@@ -42,6 +44,10 @@ const classes = computed(() => [
       ref="triggerRef"
       class="my-select__trigger"
       type="button"
+      role="combobox"
+      :aria-expanded="visible"
+      :aria-controls="dropdownId"
+      :aria-activedescendant="hoveredIndex >= 0 ? `${optionIdPrefix}-${hoveredIndex}` : undefined"
       :disabled="props.disabled"
       @click="toggle"
       @keydown="handleKeydown"
@@ -67,12 +73,16 @@ const classes = computed(() => [
       </span>
     </button>
 
-    <div v-if="visible" class="my-select__dropdown">
+    <div v-if="visible" :id="dropdownId" class="my-select__dropdown">
       <ul class="my-select__list" role="listbox">
         <li
           v-for="(option, index) in props.options"
+          :id="`${optionIdPrefix}-${index}`"
           :key="String(option.value)"
           class="my-select__option"
+          role="option"
+          :aria-selected="selectedOption?.value === option.value"
+          :aria-disabled="option.disabled || undefined"
           :class="{
             'is-selected': selectedOption?.value === option.value,
             'is-hovered': hoveredIndex === index,

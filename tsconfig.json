@@ -21,6 +21,8 @@
       "@elowen-ui/components/*": ["./packages/components/*"],
       "@elowen-ui/utils": ["./packages/utils/index.ts"],
       "@elowen-ui/utils/*": ["./packages/utils/*"],
+      "@elowen-ui/theme": ["./packages/theme/index.ts"],
+      "@elowen-ui/theme/*": ["./packages/theme/*"],
       "@elowen-ui/elowen-ui": ["./packages/elowen-ui/index.ts"],
       "@elowen-ui/elowen-ui/*": ["./packages/elowen-ui/*"]
     }

@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       '@elowen-ui/components': fileURLToPath(new URL('./packages/components/index.ts', import.meta.url)),
       '@elowen-ui/utils': fileURLToPath(new URL('./packages/utils/index.ts', import.meta.url)),
+      '@elowen-ui/theme': fileURLToPath(new URL('./packages/theme/index.ts', import.meta.url)),
       '@elowen-ui/elowen-ui': fileURLToPath(new URL('./packages/elowen-ui/index.ts', import.meta.url)),
     },
   },

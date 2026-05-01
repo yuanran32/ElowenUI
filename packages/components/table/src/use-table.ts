@@ -154,9 +154,20 @@ export const useTable = (props: TableProps, emit: any) => {
   })
 
   const selectedKeySet = computed(() => new Set(props.selectedRowKeys))
+  const isRowSelectable = (row: TableRowData, index: number) => {
+    if (typeof props.selectable === 'function') {
+      return props.selectable(row, index)
+    }
+
+    return Boolean(props.selectable)
+  }
+
   const selectableRowKeys = computed(() =>
-    sortedData.value.map((row, index) => resolveRowKey(row, index))
+    sortedData.value.flatMap((row, index) =>
+      isRowSelectable(row, index) ? [resolveRowKey(row, index)] : []
+    )
   )
+  const selectableRowKeySet = computed(() => new Set(selectableRowKeys.value))
 
   const allSelected = computed(
     () =>
@@ -170,9 +181,11 @@ export const useTable = (props: TableProps, emit: any) => {
   )
 
   const emitSelection = (nextKeys: TableRowKey[]) => {
-    const normalizedKeys = Array.from(new Set(nextKeys))
+    const normalizedKeys = Array.from(new Set(nextKeys)).filter((key) =>
+      selectableRowKeySet.value.has(key)
+    )
     const selectedRows = props.data.filter((row, index) =>
-      normalizedKeys.includes(resolveRowKey(row, index))
+      normalizedKeys.includes(resolveRowKey(row, index)) && isRowSelectable(row, index)
     )
 
     emit('update:selectedRowKeys', normalizedKeys)
@@ -180,6 +193,10 @@ export const useTable = (props: TableProps, emit: any) => {
   }
 
   const toggleRowSelection = (row: TableRowData, index: number, checked: boolean) => {
+    if (!isRowSelectable(row, index)) {
+      return
+    }
+
     const rowKey = resolveRowKey(row, index)
     const nextKeys = new Set(props.selectedRowKeys)
 
@@ -345,6 +362,7 @@ export const useTable = (props: TableProps, emit: any) => {
     handleRowClick,
     isCurrentRow,
     isIndeterminate,
+    isRowSelectable,
     isRowSelected,
     resolveRowKey,
     sortedData,
