@@ -70,6 +70,23 @@ describe('MySelect', () => {
     wrapper.unmount()
   })
 
+  it('opens with space key', async () => {
+    const wrapper = mount(Select, {
+      props: {
+        options,
+      },
+      attachTo: document.body,
+    })
+
+    const trigger = wrapper.get('.my-select__trigger')
+    await trigger.trigger('keydown', { key: ' ' })
+
+    expect(trigger.attributes('aria-expanded')).toBe('true')
+    expect(wrapper.find('.my-select__dropdown').exists()).toBe(true)
+
+    wrapper.unmount()
+  })
+
   it('exposes combobox aria state and supports home end tab keys', async () => {
     const wrapper = mount(Select, {
       props: {
@@ -80,6 +97,7 @@ describe('MySelect', () => {
 
     const trigger = wrapper.get('.my-select__trigger')
     expect(trigger.attributes('role')).toBe('combobox')
+    expect(trigger.attributes('aria-haspopup')).toBe('listbox')
     expect(trigger.attributes('aria-expanded')).toBe('false')
 
     await trigger.trigger('keydown', { key: 'End' })
@@ -90,6 +108,9 @@ describe('MySelect', () => {
     expect(trigger.attributes('aria-activedescendant')).toContain('option-0')
 
     const optionNodes = wrapper.findAll('.my-select__option')
+    const listbox = wrapper.get('.my-select__list')
+    expect(listbox.attributes('role')).toBe('listbox')
+    expect(listbox.attributes('aria-labelledby')).toBe(trigger.attributes('id'))
     expect(optionNodes[0].attributes('role')).toBe('option')
     expect(optionNodes[0].attributes('aria-selected')).toBe('false')
 

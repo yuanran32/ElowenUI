@@ -7,7 +7,9 @@ export const useSelect = (props: SelectProps, emit: any, rootRef: Ref<HTMLElemen
   const visible = ref(false)
   const hoveredIndex = ref(-1)
   const triggerRef = ref<HTMLButtonElement>()
-  const dropdownId = `my-select-dropdown-${++selectSeed}`
+  const selectId = `my-select-${++selectSeed}`
+  const triggerId = `${selectId}-trigger`
+  const dropdownId = `${selectId}-listbox`
   const optionIdPrefix = `${dropdownId}-option`
 
   const selectedIndex = computed(() =>
@@ -146,6 +148,14 @@ export const useSelect = (props: SelectProps, emit: any, rootRef: Ref<HTMLElemen
       return
     }
 
+    if (event.key === ' ' || event.key === 'Spacebar') {
+      event.preventDefault()
+      if (!visible.value) {
+        open()
+      }
+      return
+    }
+
     if (event.key === 'Escape') {
       event.preventDefault()
       close()
@@ -219,6 +229,7 @@ export const useSelect = (props: SelectProps, emit: any, rootRef: Ref<HTMLElemen
     visible,
     hoveredIndex,
     triggerRef,
+    triggerId,
     dropdownId,
     optionIdPrefix,
     selectedOption,

@@ -127,6 +127,32 @@ describe('MyDialog', () => {
     wrapper.unmount()
   })
 
+  it('sets dialog aria attributes from title and body', () => {
+    const wrapper = mount(Dialog, {
+      props: {
+        modelValue: true,
+        title: 'Dialog title',
+      },
+      slots: {
+        default: 'Dialog body',
+      },
+      attachTo: document.body,
+    })
+
+    const dialog = document.body.querySelector('.my-dialog') as HTMLElement
+    const titleId = dialog.getAttribute('aria-labelledby')
+    const descriptionId = dialog.getAttribute('aria-describedby')
+
+    expect(dialog.getAttribute('role')).toBe('dialog')
+    expect(dialog.getAttribute('aria-modal')).toBe('true')
+    expect(titleId).toBeTruthy()
+    expect(descriptionId).toBeTruthy()
+    expect(document.getElementById(titleId as string)?.textContent).toContain('Dialog title')
+    expect(document.getElementById(descriptionId as string)?.textContent).toContain('Dialog body')
+
+    wrapper.unmount()
+  })
+
   it('traps focus inside dialog and restores focus after close', async () => {
     const opener = document.createElement('button')
     opener.textContent = 'Open'
@@ -150,6 +176,7 @@ describe('MyDialog', () => {
     await wrapper.vm.$nextTick()
     const first = document.body.querySelector('.first-action') as HTMLButtonElement
     const last = document.body.querySelector('.last-action') as HTMLButtonElement
+    expect(document.activeElement).toBe(first)
 
     first.focus()
     first.dispatchEvent(new KeyboardEvent('keydown', {

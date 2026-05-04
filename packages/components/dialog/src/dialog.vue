@@ -3,6 +3,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { dialogEmits, dialogProps } from './dialog'
 import { useDialog } from './use-dialog'
 
+let dialogSeed = 0
+
 defineOptions({
   name: 'MyDialog',
 })
@@ -11,13 +13,17 @@ const props = defineProps(dialogProps)
 const emit = defineEmits(dialogEmits)
 const dialogRef = ref<HTMLDivElement>()
 let previousActiveElement: HTMLElement | null = null
+const dialogId = `my-dialog-${++dialogSeed}`
+const titleId = `${dialogId}-title`
+const descriptionId = `${dialogId}-description`
 const dialogClasses = computed(() => ['my-dialog', `is-${props.variant}`])
 
 const { visible, dialogStyle, shouldRender, close } = useDialog(props, emit)
 
 const focusDialog = async () => {
   await nextTick()
-  dialogRef.value?.focus()
+  const [firstFocusableElement] = getFocusableElements()
+  ;(firstFocusableElement ?? dialogRef.value)?.focus()
 }
 
 const getFocusableElements = () => {
@@ -144,13 +150,15 @@ onBeforeUnmount(() => {
         :style="dialogStyle"
         role="dialog"
         aria-modal="true"
-        :aria-label="props.title || 'Dialog'"
+        :aria-labelledby="props.title || $slots.header ? titleId : undefined"
+        :aria-label="props.title || $slots.header ? undefined : 'Dialog'"
+        :aria-describedby="descriptionId"
         tabindex="-1"
         @click.stop
         @keydown="handleKeydown"
       >
         <header v-if="props.title || $slots.header || props.showClose" class="my-dialog__header">
-          <div v-if="props.title || $slots.header" class="my-dialog__title">
+          <div v-if="props.title || $slots.header" :id="titleId" class="my-dialog__title">
             <slot name="header">{{ props.title }}</slot>
           </div>
           <button
@@ -164,7 +172,7 @@ onBeforeUnmount(() => {
           </button>
         </header>
 
-        <section class="my-dialog__body">
+        <section :id="descriptionId" class="my-dialog__body">
           <slot v-if="visible || !props.destroyOnClose" />
         </section>
 
